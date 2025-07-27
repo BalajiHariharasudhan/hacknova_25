@@ -1,38 +1,20 @@
 import React, { useState } from 'react';
+import { useDarkMode } from './hooks/useDarkMode';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import AnalysisPage from './components/AnalysisPage';
 import PredictionPage from './components/PredictionPage';
 import ReviewsPage from './components/ReviewsPage';
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-export type BillData = {
-  id: string;
-  month: string;
-  units: number;
-  amount: number;
-  uploadDate: Date;
-  type: 'uploaded' | 'manual';
-};
-
-export type ApplianceData = {
-  name: string;
-  consumption: number;
-  percentage: number;
-  cost: number;
-  hours: number;
-};
+import ChatBot from './components/ChatBot';
+import { User, BillData } from './types';
 
 function App() {
+  const { isDark } = useDarkMode();
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'analysis' | 'prediction' | 'reviews'>('login');
   const [user, setUser] = useState<User | null>(null);
   const [billData, setBillData] = useState<BillData[]>([]);
   const [currentBill, setCurrentBill] = useState<BillData | null>(null);
+  const [costPerUnit, setCostPerUnit] = useState(7.5);
 
   const handleLogin = (userData: User) => {
     setUser(userData);
@@ -51,12 +33,23 @@ function App() {
     setCurrentBill(bill);
   };
 
+  const handleReset = () => {
+    setBillData([]);
+    setCurrentBill(null);
+    localStorage.removeItem('billData');
+    localStorage.removeItem('currentBill');
+  };
+
   if (currentPage === 'login') {
     return <LoginPage onLogin={handleLogin} onNavigate={setCurrentPage} />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900' 
+        : 'bg-gradient-to-br from-blue-50 via-green-50 to-blue-100'
+    }`}>
       {currentPage === 'dashboard' && (
         <Dashboard 
           user={user!} 
@@ -64,6 +57,7 @@ function App() {
           onNavigate={setCurrentPage}
           onBillUpload={handleBillUpload}
           billData={billData}
+          onReset={handleReset}
         />
       )}
       {currentPage === 'analysis' && (
@@ -72,6 +66,8 @@ function App() {
           onNavigate={setCurrentPage}
           billData={billData}
           currentBill={currentBill}
+          costPerUnit={costPerUnit}
+          onCostPerUnitChange={setCostPerUnit}
         />
       )}
       {currentPage === 'prediction' && (
@@ -80,6 +76,7 @@ function App() {
           onNavigate={setCurrentPage}
           billData={billData}
           currentBill={currentBill}
+          costPerUnit={costPerUnit}
         />
       )}
       {currentPage === 'reviews' && (
@@ -88,6 +85,8 @@ function App() {
           onNavigate={setCurrentPage}
         />
       )}
+      
+      <ChatBot />
     </div>
   );
 }

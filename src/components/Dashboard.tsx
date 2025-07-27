@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Upload, FileText, BarChart3, TrendingUp, Users, LogOut, Zap, DollarSign, Calendar, Activity } from 'lucide-react';
-import type { User, BillData } from '../App';
+import { Upload, FileText, BarChart3, TrendingUp, Users, LogOut, Zap, DollarSign, Calendar, Activity, RotateCcw } from 'lucide-react';
+import { User, BillData } from '../types';
+import { useDarkMode } from '../hooks/useDarkMode';
 import FileUpload from './FileUpload';
+import DarkModeToggle from './DarkModeToggle';
 
 type DashboardProps = {
   user: User;
@@ -9,9 +11,11 @@ type DashboardProps = {
   onNavigate: (page: 'analysis' | 'prediction' | 'reviews') => void;
   onBillUpload: (bill: BillData) => void;
   billData: BillData[];
+  onReset: () => void;
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBillUpload, billData }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBillUpload, billData, onReset }) => {
+  const { isDark } = useDarkMode();
   const [showUpload, setShowUpload] = useState(false);
 
   const stats = [
@@ -46,9 +50,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900' 
+        : 'bg-gradient-to-br from-blue-50 via-green-50 to-blue-100'
+    }`}>
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+      <div className={`backdrop-blur-md border-b sticky top-0 z-50 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800/80 border-gray-700/20' 
+          : 'bg-white/80 border-white/20'
+      }`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -56,17 +68,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Smart Power Optimizer</h1>
-                <p className="text-sm text-gray-600">Welcome back, {user.name}!</p>
+                <h1 className={`text-xl font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>Smart Power Optimizer</h1>
+                <p className={`text-sm transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Welcome back, {user.name}!</p>
               </div>
             </div>
-            <button
+            <div className="flex items-center space-x-3">
+              <DarkModeToggle />
+              {billData.length > 0 && (
+                <button
+                  onClick={onReset}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all hover:scale-105 ${
+                    isDark 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                  title="Reset all data"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reset</span>
+                </button>
+              )}
+              <button
               onClick={onLogout}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                  isDark 
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>
+            </div>
           </div>
         </div>
       </div>
@@ -76,11 +109,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:scale-105 transition-transform">
+            <div key={index} className={`backdrop-blur-md rounded-2xl p-6 border hover:scale-105 transition-all duration-300 ${
+              isDark 
+                ? 'bg-gray-800/70 border-gray-700/20 hover:bg-gray-800/90' 
+                : 'bg-white/70 border-white/20 hover:bg-white/90'
+            }`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p>
+                  <p className={`text-sm font-medium transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{stat.label}</p>
+                  <p className={`text-2xl font-bold mt-1 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>{stat.value}</p>
                   <p className={`text-sm mt-2 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
                     {stat.change} from last month
                   </p>
@@ -98,13 +135,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
           
           {/* Upload Section */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+            <div className={`backdrop-blur-md rounded-2xl p-8 border transition-colors duration-300 ${
+              isDark 
+                ? 'bg-gray-800/70 border-gray-700/20' 
+                : 'bg-white/70 border-white/20'
+            }`}>
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto">
                   <Upload className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800">Upload Your Electricity Bill</h2>
-                <p className="text-gray-600">
+                <h2 className={`text-2xl font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>Upload Your Electricity Bill</h2>
+                <p className={`transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   Upload your electricity bill in PDF, image format, CSV data, or enter details manually to get started with analysis
                 </p>
                 <button
@@ -119,21 +160,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
 
             {/* Recent Bills */}
             {billData.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Bills</h3>
+              <div className={`backdrop-blur-md rounded-2xl p-6 border transition-colors duration-300 ${
+                isDark 
+                  ? 'bg-gray-800/70 border-gray-700/20' 
+                  : 'bg-white/70 border-white/20'
+              }`}>
+                <h3 className={`text-lg font-semibold mb-4 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>Recent Bills</h3>
                 <div className="space-y-3">
                   {billData.slice(-3).reverse().map((bill) => (
-                    <div key={bill.id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
+                    <div key={bill.id} className={`flex items-center justify-between p-4 rounded-xl transition-colors duration-300 ${
+                      isDark ? 'bg-gray-700/50' : 'bg-gray-50/50'
+                    }`}>
                       <div className="flex items-center space-x-3">
                         <FileText className="w-5 h-5 text-blue-500" />
                         <div>
-                          <p className="font-medium text-gray-800">{bill.month}</p>
-                          <p className="text-sm text-gray-600">{bill.units} kWh consumed</p>
+                          <p className={`font-medium transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>{bill.month}</p>
+                          <p className={`text-sm transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{bill.units} kWh consumed</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-800">₹{bill.amount}</p>
-                        <p className="text-xs text-gray-500">{bill.uploadDate.toLocaleDateString()}</p>
+                        <p className={`font-semibold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{bill.amount}</p>
+                        <p className={`text-xs transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{bill.uploadDate.toLocaleDateString()}</p>
                       </div>
                     </div>
                   ))}
@@ -144,8 +191,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
 
           {/* Quick Actions */}
           <div className="space-y-6">
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div className={`backdrop-blur-md rounded-2xl p-6 border transition-colors duration-300 ${
+              isDark 
+                ? 'bg-gray-800/70 border-gray-700/20' 
+                : 'bg-white/70 border-white/20'
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h3>
               <div className="space-y-3">
                 <button
                   onClick={() => onNavigate('analysis')}
@@ -176,7 +227,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onNavigate, onBil
             </div>
 
             {/* Energy Tip */}
-            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 text-white">
+            <div className={`rounded-2xl p-6 text-white transition-all duration-300 ${
+              isDark 
+                ? 'bg-gradient-to-r from-yellow-600 to-orange-600' 
+                : 'bg-gradient-to-r from-yellow-500 to-orange-500'
+            }`}>
               <div className="flex items-start space-x-3">
                 <Activity className="w-6 h-6 mt-1" />
                 <div>
